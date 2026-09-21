@@ -1,0 +1,17 @@
+# Public flower snapshot
+
+Run the standalone collector from the project root with `python -m app.flower_collector --max-seconds 120`. Repeat the same command until it reports `complete: true`. The Python entry point is `collect_snapshot(max_seconds=120)` in `app.flower_collector`.
+
+The first run freezes the current RETAILERS inventory. Subsequent runs resume that inventory, including queued direct menu links, completed source attempts, robots policies, host denials and request pacing. One collector process may run at a time. All requests are sequential (concurrency one), with ten-second socket timeouts, a three-megabyte response limit, at least two seconds between requests and robots crawl-delay/request-rate handling. The budget stops before starting another request; DNS resolution, filesystem writes and a slow streaming response can exceed the nominal budget. Allow at least 30 seconds per run to make useful progress.
+
+The generated snapshot and progress checkpoint live in the Reflex upload directory. Publication uses flush/fsync and atomic replacement; the UI ignores progress files. A completed snapshot is immutable: subsequent collector calls return it without crawling. To start a deliberate new capture, archive both the completed snapshot and checkpoint first. Keep the same upload storage available to the collector and app. Refresh the page after publication.
+
+No automatic collection occurs from the Flower Snapshot page. The existing retailer registry retains its existing startup behavior. Collection imports the existing RETAILERS source only when starting a new inventory.
+
+Only ordinary public HTML pages are requested. Redirect destinations are rechecked for robots permission; robots redirects or ambiguous/unavailable robots responses fail closed. No JavaScript executes, cookies are not retained, no age gate is submitted, and no API, credential, browser automation, proxy rotation or CAPTCHA solver is used. Explicit denials persist across bounded runs. Conservative gate detection can omit an otherwise readable page. JavaScript-only menus remain reachable_unparsed.
+
+Extraction accepts exact Flower, Flowers, Bud and Whole Flower categories from JSON-LD, JSON script state, selected JSON-only state assignments and semantic HTML product cards. It excludes nonordinary flower categories and product names. Variant prices stay with their own weights; absent fields remain empty and display as a dash. Numeric values from structured fields are preserved without inventing currency, units or percentages. The store label includes the original directory address to avoid merging separate locations. Direct menu links and public iframe URLs are discovered only on each landing page, not recursively crawled. Shared multi-location landing pages can require manual review: source links and coverage are retained for attribution rather than claiming full inventory completeness.
+
+Coverage counts retailer records separately from unique crawl targets and source attempts. Every original record has a final status and its source records, including no_site. Source records contain requested/final URLs, status, provider, capture time, row count and an HTML content hash where readable. Coverage is reachability/extraction coverage, not an assertion that every menu item was captured.
+
+Run offline parser guardrails with `python -m unittest app.test_flower_collector`. These tests never import the live directory or make network calls.

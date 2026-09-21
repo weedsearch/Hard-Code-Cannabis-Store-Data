@@ -1,5 +1,7 @@
 import reflex as rx
 from app.components.registry import registry
+from app.components.flowers import flower_snapshot
+from app.states.flowers import FlowerState
 from app.snapshot import SOURCE_URL
 
 
@@ -46,6 +48,7 @@ def index() -> rx.Component:
                 class_name="pb-8 pt-10 md:pt-14",
             ),
             registry(),
+            flower_snapshot(),
             rx.el.footer(
                 rx.el.div(
                     rx.el.p(
@@ -91,6 +94,7 @@ app = rx.App(
 app.add_page(
     index,
     route="/",
+    on_load=FlowerState.load_snapshot,
     title="Massachusetts Cannabis Retailer Directory",
     description="Search a public-source snapshot loaded at server startup of Massachusetts cannabis retailer records. Confirm current details with the retailer.",
 )
